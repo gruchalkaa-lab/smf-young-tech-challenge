@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
+use App\Models\Contractor;
 use App\Models\Invoice;
+use App\Models\Payment;
+use App\Services\InvoiceParsingAgent;
 use App\Services\OcrService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
-    public function __construct(private OcrService $ocrService)
-    {
+    public function __construct(
+        private OcrService $ocrService,
+        private InvoiceParsingAgent $parsingAgent,
+    ) {
     }
 
     public function index(): JsonResponse
@@ -36,10 +41,34 @@ class InvoiceController extends Controller
 
         $invoice->update([
             'raw_ocr_text' => $text,
+            'status' => 'processing',
+        ]);
+
+        $parsedData = $this->parsingAgent->parse($text);
+
+        $contractor = null;
+        if (!empty($parsedData['contractor_name']) || !empty($parsedData['nip'])) {
+            $contractor = Contractor::firstOrCreate(
+                ['nip' => $parsedData['nip']],
+                ['name' => $parsedData['contractor_name'] ?? 'Nieznany kontrahent']
+            );
+        }
+
+        if (!empty($parsedData['total_amount'])) {
+            Payment::create([
+                'invoice_id' => $invoice->id,
+                'amount' => $parsedData['total_amount'],
+                'currency' => $parsedData['currency'],
+                'method' => $parsedData['payment_method'],
+            ]);
+        }
+
+        $invoice->update([
+            'contractor_id' => $contractor?->id,
             'status' => 'processed',
         ]);
 
-        return response()->json($invoice, 201);
+        return response()->json($invoice->load(['contractor', 'items', 'payment']), 201);
     }
 
     public function show(Invoice $invoice): JsonResponse
