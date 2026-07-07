@@ -1,0 +1,297 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Symfonia Young Tech Challenge API",
+        "description": "API do zarządzania fakturami z automatycznym OCR i ekstrakcją danych przez prostego agenta regułowego.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Serwer lokalny"
+        }
+    ],
+    "paths": {
+        "/contractors": {
+            "get": {
+                "tags": [
+                    "Contractors"
+                ],
+                "summary": "Lista wszystkich kontrahentów",
+                "operationId": "64a629b41eaf8ea2ccff441890ba5086",
+                "responses": {
+                    "200": {
+                        "description": "Lista kontrahentów wraz z ich fakturami"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Contractors"
+                ],
+                "summary": "Utwórz nowego kontrahenta",
+                "operationId": "7ff9b09be8baa134aadb16a2cd065ade",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "ABC Sp. z o.o."
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "ul. Przykładowa 5, Gdańsk"
+                                    },
+                                    "nip": {
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kontrahent utworzony"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                }
+            }
+        },
+        "/contractors/{id}": {
+            "get": {
+                "tags": [
+                    "Contractors"
+                ],
+                "summary": "Pokaż jednego kontrahenta",
+                "operationId": "231b08d3809da9fd8f34b244de68ac33",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dane kontrahenta"
+                    },
+                    "404": {
+                        "description": "Nie znaleziono"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Contractors"
+                ],
+                "summary": "Zaktualizuj kontrahenta",
+                "operationId": "2c01d9a114a86806d0d5f7a756d8f396",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "ABC Sp. z o.o."
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "ul. Przykładowa 5"
+                                    },
+                                    "nip": {
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kontrahent zaktualizowany"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Contractors"
+                ],
+                "summary": "Usuń kontrahenta",
+                "operationId": "5a630ed5e2d786df7e0c90d936106ade",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Kontrahent usunięty"
+                    }
+                }
+            }
+        },
+        "/invoices": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Lista wszystkich faktur",
+                "operationId": "6d247429479a7a96338af3a38d52e215",
+                "responses": {
+                    "200": {
+                        "description": "Lista faktur wraz z kontrahentem, pozycjami i płatnością"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Wgraj nową fakturę (PDF/JPG/PNG) - automatycznie uruchamia OCR i ekstrakcję danych",
+                "operationId": "b22372f77704d157104e4a6061b135d0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "invoice_file"
+                                ],
+                                "properties": {
+                                    "invoice_file": {
+                                        "description": "Plik faktury (PDF, JPG, JPEG lub PNG, max 10MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Faktura przetworzona: OCR i agent wyciągnęły dostępne dane"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji pliku"
+                    }
+                }
+            }
+        },
+        "/invoices/{id}": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Pokaż jedną fakturę",
+                "operationId": "93cb2b87637ce1c8b34f4d784d8b8820",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dane faktury"
+                    },
+                    "404": {
+                        "description": "Nie znaleziono"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Zaktualizuj fakturę (np. ręczna korekta po OCR)",
+                "operationId": "1e7ea8e3386e43497edbe51374b1ccb3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Faktura zaktualizowana"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Usuń fakturę wraz z plikiem",
+                "operationId": "ad79fd4aee964cd008bc746e724544f6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Faktura usunięta"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Contractors",
+            "description": "Zarządzanie kontrahentami"
+        },
+        {
+            "name": "Invoices",
+            "description": "Zarządzanie fakturami: upload, OCR, ekstrakcja danych"
+        }
+    ]
+}
