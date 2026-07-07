@@ -12,7 +12,7 @@ class StoreInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,15 @@ class StoreInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'invoice_file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+        ];
+    }
+    public function messages(): array
+    {
+        return [
+            'invoice_file.required' => 'Plik faktury jest wymagany.',
+            'invoice_file.mimes' => 'Dozwolone formaty: PDF, JPG, JPEG, PNG.',
+            'invoice_file.max' => 'Plik nie może przekraczać 10 MB.',
         ];
     }
 }

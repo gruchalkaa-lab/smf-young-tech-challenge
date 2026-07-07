@@ -3,47 +3,45 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreInvoiceRequest;
+use App\Models\Invoice;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        return response()->json(Invoice::with(['contractor', 'items', 'payment'])->get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreInvoiceRequest $request): JsonResponse
     {
-        //
+        $file = $request->file('invoice_file');
+        $path = $file->store('invoices', 'local');
+
+        $invoice = Invoice::create([
+            'file_path' => $path,
+            'status' => 'uploaded',
+        ]);
+
+        return response()->json($invoice, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Invoice $invoice): JsonResponse
     {
-        //
+        return response()->json($invoice->load(['contractor', 'items', 'payment']));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Invoice $invoice): JsonResponse
     {
-        //
+        return response()->json($invoice);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Invoice $invoice): JsonResponse
     {
-        //
+        Storage::disk('local')->delete($invoice->file_path);
+        $invoice->delete();
+        return response()->json(null, 204);
     }
 }
