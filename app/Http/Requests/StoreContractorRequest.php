@@ -12,7 +12,7 @@ class StoreContractorRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,9 @@ class StoreContractorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+        'name' => ['required', 'string', 'max:255'],
+        'address' => ['nullable', 'string', 'max:255'],
+        'nip' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

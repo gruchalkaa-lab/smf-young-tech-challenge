@@ -10,13 +10,17 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('payments', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
-
+{
+    Schema::create('payments', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+        $table->decimal('amount', 10, 2)->nullable();
+        $table->string('currency', 3)->default('PLN');
+        $table->string('method')->nullable();
+        $table->date('paid_at')->nullable();
+        $table->timestamps();
+    });
+}
     /**
      * Reverse the migrations.
      */

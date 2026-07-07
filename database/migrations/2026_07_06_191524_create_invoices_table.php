@@ -10,12 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('invoices', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('contractor_id')->nullable()->constrained()->nullOnDelete();
+        $table->string('file_path');
+        $table->text('raw_ocr_text')->nullable();
+        $table->string('status')->default('uploaded');
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.
