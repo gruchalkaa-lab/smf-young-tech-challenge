@@ -1,58 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Symfonia Young Tech Challenge - System zarządzania fakturami
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikacja webowa (Laravel) do zarządzania fakturami: upload plików (PDF/JPG/PNG), automatyczne rozpoznawanie tekstu (OCR), oraz ekstrakcja ustrukturyzowanych danych (kontrahent, kwota, pozycje) przy pomocy prostego agenta regułowego.
 
-## About Laravel
+Projekt przygotowany w ramach rekrutacji Symfonia Young Tech Challenge.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Spis treści
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Funkcjonalności
+- Architektura
+- Wymagania
+- Instalacja
+- Uruchomienie
+- Dokumentacja API
+- Przykładowa faktura testowa
+- Agent AI - założenia i ograniczenia
+- Struktura bazy danych
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Funkcjonalności
 
-## Learning Laravel
+- Upload faktur w formacie PDF, JPG, JPEG, PNG (walidacja typu i rozmiaru pliku)
+- Automatyczne rozpoznawanie tekstu (OCR) przy użyciu Tesseract OCR (dla obrazów) i biblioteki pdfparser (dla PDF-ów z tekstem)
+- Prosty agent regułowy (oparty na wyrażeniach regularnych) do ekstrakcji danych: nazwa kontrahenta, NIP, kwota, waluta, sposób płatności
+- Pełny CRUD (REST API) dla kontrahentów i faktur
+- Automatyczne tworzenie/łączenie kontrahentów na podstawie NIP-u
+- Interaktywna dokumentacja API (Swagger/OpenAPI)
+- Baza danych SQLite (bez potrzeby konfiguracji zewnętrznego serwera bazy danych)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Architektura
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Upload pliku (Controller) -> OcrService (Tesseract / pdfparser) -> InvoiceParsingAgent (regex-based) -> Zapis do bazy (Contractor, Invoice, InvoiceItem, Payment)
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Modele i relacje:
+- Contractor (kontrahent) - hasMany - Invoice
+- Invoice (faktura) - belongsTo Contractor, hasMany InvoiceItem, hasOne Payment
+- InvoiceItem (pozycja faktury) - belongsTo Invoice
+- Payment (płatność) - belongsTo Invoice
 
-## Agentic Development
+## Wymagania
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- PHP 8.2+
+- Composer
+- Tesseract OCR (z pakietem językowym pol)
+- Rozszerzenie PHP: sqlite3
 
-```bash
-composer require laravel/boost --dev
+## Instalacja
 
-php artisan boost:install
-```
+Sklonuj repozytorium:
+git clone https://github.com/gruchalkaa-lab/smf-young-tech-challenge.git
+cd smf-young-tech-challenge
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Zainstaluj zależności PHP:
+composer install
 
-## Contributing
+Skopiuj plik konfiguracyjny:
+cp .env.example .env
+php artisan key:generate
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Zainstaluj Tesseract OCR (Ubuntu/Debian):
+sudo apt update
+sudo apt install -y tesseract-ocr tesseract-ocr-pol
 
-## Code of Conduct
+Utwórz bazę danych SQLite:
+touch database/database.sqlite
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Uruchom migracje:
+php artisan migrate
 
-## Security Vulnerabilities
+## Uruchomienie
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+php artisan serve
 
-## License
+Aplikacja będzie dostępna pod adresem: http://127.0.0.1:8000
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Dokumentacja API
+
+Interaktywna dokumentacja Swagger dostępna jest pod adresem:
+http://127.0.0.1:8000/api/documentation
+
+Aby wygenerować dokumentację na nowo po zmianach w kodzie:
+php artisan l5-swagger:generate
+
+### Główne endpointy
+
+| Metoda | Endpoint | Opis |
+|--------|----------|------|
+| GET | /api/contractors | Lista kontrahentów |
+| POST | /api/contractors | Utwórz kontrahenta |
+| GET | /api/contractors/{id} | Pokaż kontrahenta |
+| PUT | /api/contractors/{id} | Zaktualizuj kontrahenta |
+| DELETE | /api/contractors/{id} | Usuń kontrahenta |
+| GET | /api/invoices | Lista faktur |
+| POST | /api/invoices | Wgraj fakturę (uruchamia OCR + agenta) |
+| GET | /api/invoices/{id} | Pokaż fakturę |
+| PUT | /api/invoices/{id} | Zaktualizuj fakturę |
+| DELETE | /api/invoices/{id} | Usuń fakturę |
+
+### Przykładowe żądanie (upload faktury)
+
+curl -X POST http://127.0.0.1:8000/api/invoices -H "Accept: application/json" -F "invoice_file=@sciezka/do/faktury.pdf"
+
+## Przykładowa faktura testowa
+
+W folderze examples/ znajduje się przykładowy plik testowy, który można wykorzystać do sprawdzenia działania endpointu uploadu.
+
+## Agent AI - założenia i ograniczenia
+
+Agent (InvoiceParsingAgent) jest celowo zaprojektowany jako prosty parser regułowy oparty na wyrażeniach regularnych, a nie jako model uczenia maszynowego (np. LLM). Decyzja podyktowana była:
+- ograniczonym czasem realizacji zadania,
+- brakiem wymogu 100% dokładności ("agent nie musi być idealny"),
+- przewidywalnością i łatwością debugowania rozwiązania regułowego.
+
+Agent wyciąga: nazwę kontrahenta, NIP, kwotę do zapłaty, walutę, sposób płatności. Nie próbuje rozpoznawać pojedynczych pozycji faktury (invoice_items) - to naturalny kierunek dalszego rozwoju.
+
+Możliwe kierunki rozwoju: zastąpienie/uzupełnienie logiki regułowej modelem językowym (np. lokalny model przez Ollama) przy zachowaniu tego samego interfejsu (parse(string $text): array), co pozwoliłoby na łatwą wymianę implementacji bez zmian w reszcie aplikacji.
+
+## Struktura bazy danych
+
+contractors: id, name, address, nip, created_at, updated_at
+
+invoices: id, contractor_id (FK), file_path, raw_ocr_text, status (uploaded/processing/processed), created_at, updated_at
+
+invoice_items: id, invoice_id (FK), name, quantity, unit_price, total_price, created_at, updated_at
+
+payments: id, invoice_id (FK), amount, currency, method, paid_at, created_at, updated_at
